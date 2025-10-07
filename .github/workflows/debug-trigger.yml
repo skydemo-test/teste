@@ -1,0 +1,14 @@
+# Arquivo temporário para depuração
+name: DEBUG - Registry Package Trigger
+
+on:
+  registry_package:
+    types: [published, updated] # Escuta tanto 'published' quanto 'updated'
+
+jobs:
+  inspect_event:
+    runs-on: ubuntu-latest
+    name: Dump GitHub Event Context
+    steps:
+      - name: Print entire GitHub event context
+        run: echo "${{ toJSON(github.event) }}"
