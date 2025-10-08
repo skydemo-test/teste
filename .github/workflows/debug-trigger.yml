@@ -1,4 +1,4 @@
-name: Print Image Tag from registry_package
+name: Print Image Tag (multi-event)
 
 on:
   registry_package:
@@ -11,7 +11,14 @@ jobs:
   print-image-tag:
     runs-on: ubuntu-latest
     steps:
-      - name: Print image name and tag
+      - name: Print info
         run: |
-          echo "Nome da imagem: ${{ github.event.registry_package.name }}"
-          echo "Tag da imagem: ${{ github.event.registry_package.package_version.container_metadata.tag.name }}"
+          if [[ "${{ github.event_name }}" == "registry_package" ]]; then
+            echo "Nome da imagem: ${{ github.event.registry_package.name }}"
+            echo "Tag da imagem: ${{ github.event.registry_package.package_version.container_metadata.tag.name }}"
+          elif [[ "${{ github.event_name }}" == "repository_dispatch" ]]; then
+            echo "Nome da imagem: app"
+            echo "Tag da imagem: ${{ github.event.client_payload.image_tag }}"
+          else
+            echo "Evento não esperado para print de imagem/tag."
+          fi
