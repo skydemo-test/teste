@@ -20,20 +20,34 @@ jobs:
             let tag;
             let name;
             const event = github.event || {};
-
-            if (event.registry_package && event.registry_package.package_version && event.registry_package.package_version.container_metadata) {
+      
+            // Evento registry_package
+            if (
+              event.registry_package &&
+              event.registry_package.package_version &&
+              event.registry_package.package_version.container_metadata &&
+              event.registry_package.package_version.container_metadata.tag &&
+              event.registry_package.package_version.container_metadata.tag.name
+            ) {
               const pkg = event.registry_package;
               name = pkg.name || "undefined";
               tag = pkg.package_version.container_metadata.tag.name;
               core.info(`Disparo via registry_package: pacote ${name}, tag ${tag}`);
-            } else if (event.client_payload && event.client_payload.image_tag) {
+            }
+            // Evento repository_dispatch
+            else if (
+              event.client_payload &&
+              event.client_payload.image_tag
+            ) {
               name = "app";
               tag = event.client_payload.image_tag;
               core.info(`Disparo via repository_dispatch: pacote ${name}, tag ${tag}`);
-            } else {
+            }
+            // Evento manual/workflow_dispatch (se quiser, pode adaptar para receber input)
+            else {
               core.warning('Evento sem payload de tag detectado.');
             }
-
+      
             if (!tag) {
               core.setFailed('Nenhuma tag de imagem encontrada!');
             } else if (!tag.startsWith('v') && !/^[a-f0-9]{7}$/.test(tag)) {
