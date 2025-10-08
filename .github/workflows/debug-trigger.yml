@@ -19,15 +19,12 @@ jobs:
           script: |
             let tag;
             let name;
-
-            if (github.event.registry_package) {
-              // Disparo automático pelo registro de pacote
+            if (typeof github.event.registry_package !== 'undefined' && github.event.registry_package) {
               const pkg = github.event.registry_package;
-              name = pkg.name;
-              tag = pkg.package_version.container_metadata.tag.name;
+              name = pkg.name || "undefined";
+              tag = pkg.package_version?.container_metadata?.tag?.name;
               core.info(`Disparo via registry_package: pacote ${name}, tag ${tag}`);
             } else if (github.event.client_payload && github.event.client_payload.image_tag) {
-              // Disparo manual via repository_dispatch
               name = "app";
               tag = github.event.client_payload.image_tag;
               core.info(`Disparo via repository_dispatch: pacote ${name}, tag ${tag}`);
@@ -37,8 +34,8 @@ jobs:
 
             if (!tag) {
               core.setFailed('Nenhuma tag de imagem encontrada!');
-            } else if (!tag.startsWith('v')) {
-              core.setFailed(`Tag inválida: ${tag} (deveria começar com "v")`);
+            } else if (!tag.startsWith('v') && !/^[a-f0-9]{7}$/.test(tag)) {
+              core.setFailed(`Tag inválida: ${tag} (deveria começar com "v" ou ser SHA de 7 dígitos)`);
             } else {
               core.info(`Tag válida detectada: ${tag} para pacote ${name}`);
             }
