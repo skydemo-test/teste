@@ -3,7 +3,9 @@ name: Validate Published Docker Image Tag
 on:
   registry_package:
     types: [published, updated]
-
+  
+  workflow_dispatch:
+  
 jobs:
   validate-image-tag:
     runs-on: ubuntu-latest
