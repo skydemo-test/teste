@@ -1,14 +1,24 @@
-# Arquivo temporário para depuração
-name: DEBUG - Registry Package Trigger
+name: Validate Published Docker Image Tag
 
 on:
   registry_package:
-    types: [published, updated] # Escuta tanto 'published' quanto 'updated'
+    types: [published, updated]
 
 jobs:
-  inspect_event:
+  validate-image-tag:
     runs-on: ubuntu-latest
-    name: Dump GitHub Event Context
     steps:
-      - name: Print entire GitHub event context
+      - name: Dump event context
         run: echo "${{ toJSON(github.event) }}"
+      - name: Validate image tag with github-script
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pkg = github.event.registry_package;
+            const name = pkg.name; // ex: "app"
+            const tag = pkg.package_version.container_metadata.tag.name; // ex: "v0.0.1"
+            if (!tag.startsWith("v")) {
+              core.setFailed(`Tag inválida: ${tag} (deveria começar com 'v')`);
+            } else {
+              core.info(`Tag válida detectada: ${tag} para pacote ${name}`);
+            }
