@@ -19,14 +19,14 @@ jobs:
           script: |
             let tag;
             let name;
-            const event = github.event;
+            const event = github.event || {};
 
-            if (event.hasOwnProperty('registry_package') && event.registry_package) {
+            if (event.registry_package && event.registry_package.package_version && event.registry_package.package_version.container_metadata) {
               const pkg = event.registry_package;
               name = pkg.name || "undefined";
-              tag = pkg.package_version?.container_metadata?.tag?.name;
+              tag = pkg.package_version.container_metadata.tag.name;
               core.info(`Disparo via registry_package: pacote ${name}, tag ${tag}`);
-            } else if (event.hasOwnProperty('client_payload') && event.client_payload && event.client_payload.image_tag) {
+            } else if (event.client_payload && event.client_payload.image_tag) {
               name = "app";
               tag = event.client_payload.image_tag;
               core.info(`Disparo via repository_dispatch: pacote ${name}, tag ${tag}`);
