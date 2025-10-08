@@ -1,29 +1,44 @@
 name: Validate Published Docker Image Tag
 
-#on:
-#  registry_package:
-#    types: [published, updated, validate-image]
 on:
+  registry_package:
+    types: [published, updated]
   repository_dispatch:
     types: [validate-image]
-    
   workflow_dispatch:
-  
+
 jobs:
   validate-image-tag:
     runs-on: ubuntu-latest
     steps:
-      - name: Dump event context
+      - name: Dump GitHub event context
         run: echo "${{ toJSON(github.event) }}"
       - name: Validate image tag with github-script
         uses: actions/github-script@v7
         with:
           script: |
-            const pkg = github.event.registry_package;
-            const name = pkg.name; // ex: "app"
-            const tag = pkg.package_version.container_metadata.tag.name; // ex: "v0.0.1"
-            if (!tag.startsWith("v")) {
-              core.setFailed(`Tag inválida: ${tag} (deveria começar com 'v')`);
+            let tag;
+            let name;
+
+            if (github.event.registry_package) {
+              // Disparo automático pelo registro de pacote
+              const pkg = github.event.registry_package;
+              name = pkg.name;
+              tag = pkg.package_version.container_metadata.tag.name;
+              core.info(`Disparo via registry_package: pacote ${name}, tag ${tag}`);
+            } else if (github.event.client_payload && github.event.client_payload.image_tag) {
+              // Disparo manual via repository_dispatch
+              name = "app";
+              tag = github.event.client_payload.image_tag;
+              core.info(`Disparo via repository_dispatch: pacote ${name}, tag ${tag}`);
+            } else {
+              core.warning('Evento sem payload de tag detectado.');
+            }
+
+            if (!tag) {
+              core.setFailed('Nenhuma tag de imagem encontrada!');
+            } else if (!tag.startsWith('v')) {
+              core.setFailed(`Tag inválida: ${tag} (deveria começar com "v")`);
             } else {
               core.info(`Tag válida detectada: ${tag} para pacote ${name}`);
             }
