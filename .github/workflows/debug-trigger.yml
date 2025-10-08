@@ -1,57 +1,14 @@
-name: Validate Published Docker Image Tag
+name: Print Image Tag from registry_package
 
 on:
   registry_package:
     types: [published, updated]
-  repository_dispatch:
-    types: [validate-image]
-  workflow_dispatch:
 
 jobs:
-  validate-image-tag:
+  print-image-tag:
     runs-on: ubuntu-latest
     steps:
-      - name: Dump GitHub event context
-        run: echo "${{ toJSON(github.event) }}"
-      - name: Validate image tag with github-script
-        uses: actions/github-script@v7
-        with:
-          script: |
-            let tag;
-            let name;
-            const event = github.event || {};
-      
-            // Evento registry_package
-            if (
-              event.registry_package &&
-              event.registry_package.package_version &&
-              event.registry_package.package_version.container_metadata &&
-              event.registry_package.package_version.container_metadata.tag &&
-              event.registry_package.package_version.container_metadata.tag.name
-            ) {
-              const pkg = event.registry_package;
-              name = pkg.name || "undefined";
-              tag = pkg.package_version.container_metadata.tag.name;
-              core.info(`Disparo via registry_package: pacote ${name}, tag ${tag}`);
-            }
-            // Evento repository_dispatch
-            else if (
-              event.client_payload &&
-              event.client_payload.image_tag
-            ) {
-              name = "app";
-              tag = event.client_payload.image_tag;
-              core.info(`Disparo via repository_dispatch: pacote ${name}, tag ${tag}`);
-            }
-            // Evento manual/workflow_dispatch (se quiser, pode adaptar para receber input)
-            else {
-              core.warning('Evento sem payload de tag detectado.');
-            }
-      
-            if (!tag) {
-              core.setFailed('Nenhuma tag de imagem encontrada!');
-            } else if (!tag.startsWith('v') && !/^[a-f0-9]{7}$/.test(tag)) {
-              core.setFailed(`Tag inválida: ${tag} (deveria começar com "v" ou ser SHA de 7 dígitos)`);
-            } else {
-              core.info(`Tag válida detectada: ${tag} para pacote ${name}`);
-            }
+      - name: Print image name and tag
+        run: |
+          echo "Nome da imagem: ${{ github.event.registry_package.name }}"
+          echo "Tag da imagem: ${{ github.event.registry_package.package_version.container_metadata.tag.name }}"
