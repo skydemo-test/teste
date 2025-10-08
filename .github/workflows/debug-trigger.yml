@@ -1,9 +1,12 @@
 name: Validate Published Docker Image Tag
 
+#on:
+#  registry_package:
+#    types: [published, updated, validate-image]
 on:
-  registry_package:
-    types: [published, updated]
-  
+  repository_dispatch:
+    types: [validate-image]
+    
   workflow_dispatch:
   
 jobs:
