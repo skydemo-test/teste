@@ -3,6 +3,9 @@ name: Print Image Tag from registry_package
 on:
   registry_package:
     types: [published, updated]
+  repository_dispatch:
+    types: [validate-image]
+  workflow_dispatch:
 
 jobs:
   print-image-tag:
